@@ -1,4 +1,13 @@
-# DETree: DEtecting Human-AI Collaborative Texts via Tree-Structured Hierarchical Representation Learning ✨
+<div align="center">
+<h1>✨DETree: DEtecting Human-AI Collaborative Texts via Tree-Structured Hierarchical Representation Learning</h1>
+</div>
+
+<div align="center">
+<p align="center">
+  <img src="./figs/overall.svg"/>
+</p>
+</div>
+
 
 
 
