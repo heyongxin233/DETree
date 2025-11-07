@@ -115,7 +115,7 @@ Both demo entry points automatically expose controls for switching the embedding
 
 ### Tree-Structured Contrastive Learning
 
-Align the encoder with the HAT using a tree-structured contrastive loss. We provide prebuilt trees in `HAT_structure/`; using the corresponding tree directly can reproduce the results in the paper.
+Align the encoder representation space with the HAT using a tree-structured contrastive loss. We provide prebuilt trees in `HAT_structure/`; using the corresponding tree directly can reproduce the results in the paper.
 
 Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train text encoder on the build HAT.
 
