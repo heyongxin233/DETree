@@ -117,7 +117,7 @@ Both demo entry points automatically expose controls for switching the embedding
 
 Align the encoder with the HAT using a tree-structured contrastive loss. We provide prebuilt trees in `HAT_structure/`; using the corresponding tree directly can reproduce the results in the paper.
 
-Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree on the build HAT.
+Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train on the build HAT.
 
 ### Reproducing the Paper
 
@@ -125,11 +125,11 @@ The training workflow mirrors the two-stage procedure described in the paper:
 
 1. **Stage 1: Supervision Contrastive Learning**
    - [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh): build the handcrafted tree from the RealBench JSONL files.
-   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree with LoRA adapters on the handcrafted tree.
+   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train with LoRA adapters on the handcrafted tree.
    - [`scripts/gen_emb.sh`](scripts/gen_emb.sh): export the Stage 1 embedding database.
 2. **Stage 2:Tree-Structured Contrastive Learning**
-   - [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh): compute similarity matrices from the Stage 1 embeddings and derive the hierarchical tree (per encoder layer).
-   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree on the new tree.
+   - [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh): compute similarity matrix from the Stage 1 embeddings and derive HAT.
+   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train on the HAT.
 3. **Evaluation and deployment**
    - [`scripts/merge_lora.sh`](scripts/merge_lora.sh): merge the LoRA adapter into the base checkpoint for standalone inference.
    - [`scripts/compress_database.sh`](scripts/compress_database.sh): cluster embeddings into compact and balanced prototypes.
