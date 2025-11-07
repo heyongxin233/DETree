@@ -56,7 +56,7 @@ Every JSON record exposes the keys consumed by the training and evaluation scrip
 
 Inside the root folder you will also find an `embbedings/` directory containing two ready-to-use databases:
 
-- `embbedings/mage_center10k.pt` – embeddings built from the MAGE training split and compressed to 10k human + 10k AI prototypes.
+- `embbedings/mage_center10k.pt` – embeddings built from the MAGE training split and compressed to 10k prototypes.
 - `embbedings/priori1_center10k.pt` – embeddings covering the full RealBench AI/human data, compressed with the same hyper-parameters.
 
 > 💡 **Plug-and-play embeddings:** Both files follow the exact schema produced by [`scripts/gen_emb.sh`](scripts/gen_emb.sh), making them drop-in replacements for generated checkpoints. Point the demo or inference commands below at either file for instant results—no retraining required.
@@ -119,7 +119,7 @@ Both demo entry points automatically expose controls for switching the embedding
 
 Align the encoder with the HAT using a tree-structured contrastive loss. We provide prebuilt trees in `HAT_structure/`; using the corresponding tree directly can reproduce the results in the paper.
 
-Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree on the build tree.
+Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree on the build HAT.
 
 ### Reproducing the Paper
 
@@ -143,10 +143,10 @@ Each script lists all configurable arguments at the top—edit the path and hype
 
 | Script | Purpose |
 | --- | --- |
-| [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh) | Generate the two-level PCL tree used during warm-up training. |
+| [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh) | Generate the SCL tree used during stage 1 training. |
 | [`scripts/train_detree.sh`](scripts/train_detree.sh) | Launch DETree training with configurable optimisation, LoRA, and data options. |
 | [`scripts/gen_emb.sh`](scripts/gen_emb.sh) | Export embedding databases from a trained checkpoint. |
-| [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh) | Create similarity matrices and hierarchical trees (HAT) from warm-up embeddings. |
+| [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh) | Create similarity matrices and HAT from embeddings. |
 | [`scripts/merge_lora.sh`](scripts/merge_lora.sh) | Merge a LoRA adapter into the base RoBERTa model. |
 | [`scripts/compress_database.sh`](scripts/compress_database.sh) | Cluster embeddings into compact prototypes for efficient inference. |
 | [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) | Evaluate checkpoints against a saved embedding database. |
