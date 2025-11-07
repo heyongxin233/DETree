@@ -1,4 +1,175 @@
-# DETree
-[NeurIPS 2025]  DETree: DEtecting Human-AI Collaborative Texts via Tree-Structured Hierarchical Representation Learning
+# DETree: DEtecting Human-AI Collaborative Texts via Tree-Structured Hierarchical Representation Learning ✨
 
-Coming Soon！
+📄 NeurIPS 2025 · [Paper](https://arxiv.org/abs/2510.17489) · 🤗 [Model: heyongxin233/DETree](https://huggingface.co/heyongxin233/DETree) · 🧪 [Dataset: heyongxin233/RealBench](https://huggingface.co/datasets/heyongxin233/RealBench)
+
+## Table of Contents
+- [Introduction](#introduction)
+- [Dataset](#dataset)
+- [Model](#model)
+- [Installation](#installation)
+- [Demo & Inference](#demo--inference)
+- [Training](#training)
+- [Reproducing the Paper](#reproducing-the-paper)
+- [Scripts Overview](#scripts-overview)
+
+## 🎯 Introduction
+
+DETree tackles human–AI collaborative text detection with a tree-structured, multi-level contrastive learning framework. This repository contains the full training and inference stack used in our paper. Every stage is exposed as a standalone Python module or shell script so you can mix, match, and customise the pipeline without digging through hidden orchestration logic.
+
+## 🗂️ Dataset
+
+RealBench provides human-written, machine-generated, and collaborative texts paired with metadata that mirrors the settings in the paper. Download the dataset from the Hugging Face Hub and keep the folder structure intact:
+
+```bash
+huggingface-cli download --repo-type dataset heyongxin233/RealBench --local-dir /path/to/RealBench
+```
+
+The repository is organised by benchmark family (e.g., `Deepfake/`, `OUTFOX/`, `RAID/`, `TuringBench/`, `M4_monolingual/`, `M4_multilingual/`). Each family contains attack-specific folders such as `no_attack/`, `extend/`, `paraphrase_by_llm/`, `perplexity_attack/`, or `synonym/`, and every folder holds split-wise JSONL dumps (`train.jsonl`, `valid.jsonl`, `test.jsonl`, plus extras like `test_ood.jsonl` where available). A compact view of the default layout looks like:
+
+```text
+RealBench/
+├── Deepfake/
+│   ├── no_attack/
+│   │   ├── train.jsonl
+│   │   ├── valid.jsonl
+│   │   └── test.jsonl
+│   ├── paraphrase_by_llm/
+│   │   └── ...
+│   └── (extend | perplexity_attack | polish | synonym | translate)/
+├── OUTFOX/
+│   └── ...
+├── RAID/ and RAID_extra/
+│   └── ...
+├── TuringBench/
+│   └── ...
+├── M4_monolingual/ and M4_multilingual/
+│   └── ...
+└── embbedings/
+    ├── mage_center10k.pt
+    └── priori1_center10k.pt
+```
+
+Every JSON record exposes the keys consumed by the training and evaluation scripts—`text` (content), `label` (binary human/AI tag), `src` (generator identity), and `id` (stable sample identifier). Downstream metrics treat label `'0'` as human and `'1'` as machine, matching the evaluation helpers. Some sub-benchmarks add optional metadata fields (topic, prompt, attack recipe, etc.); you can leave those untouched, and DETree will simply pass them through the pipeline.
+
+Inside the root folder you will also find an `embbedings/` directory containing two ready-to-use databases:
+
+- `embbedings/mage_center10k.pt` – embeddings built from the MAGE training split and compressed to 10k human + 10k AI prototypes.
+- `embbedings/priori1_center10k.pt` – embeddings covering the full RealBench AI/human data, compressed with the same hyper-parameters.
+
+> 💡 **Plug-and-play embeddings:** Both files follow the exact schema produced by [`scripts/gen_emb.sh`](scripts/gen_emb.sh), making them drop-in replacements for generated checkpoints. Point the demo or inference commands below at either file for instant results—no retraining required.
+
+## 🧠 Model
+
+The finetuned detector checkpoint is published as [heyongxin233/DETree](https://huggingface.co/heyongxin233/DETree). Load it via the Hugging Face `AutoModel` APIs or point the scripts in this repository at the hub identifier. The model is compatible with the compressed RealBench embeddings out of the box, so you can evaluate or serve DETree immediately after downloading the assets above.
+
+## ⚙️ Installation
+
+1. Clone the repository and enter the folder.
+   ```bash
+   git clone https://github.com/heyongxin233/DETree.git
+   cd DETree
+   ```
+2. Create a Python environment and install the runtime dependencies (PyTorch—2.8.0 recommended—Transformers, the latest Lightning release, GPU-enabled FAISS, Gradio, etc.).
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+   > 🔧 **Version highlights:** `requirements.txt` keeps `torch` flexible (2.8.0 is recommended), leaves `lightning` unpinned so you always receive the newest release, and installs `faiss-gpu` without a version constraint for compatibility with your CUDA setup.
+3. Add the repository to your `PYTHONPATH` so the CLI modules resolve when executed from the project root.
+   ```bash
+   export PYTHONPATH="$(pwd):$PYTHONPATH"
+   ```
+
+## 🚀 Demo & Inference
+
+### 💻 Command-line demo
+
+Run the lightweight CLI demo with either of the published embedding databases:
+
+```bash
+python example/infer.py \
+  --database-path /path/to/RealBench/embbedings/priori1_center10k.pt \
+  --model-name-or-path heyongxin233/DETree \
+  --text "Large language models are changing the world."
+```
+
+The script accepts repeated `--text` arguments or an input file/JSONL via `--input-file` and prints the DETree label together with calibrated human/AI probabilities.
+
+### 🌐 Gradio web UI
+
+Launch the interactive interface for live demos and sharing:
+
+```bash
+python example/web_demo.py \
+  --database-path /path/to/RealBench/embbedings/mage_center10k.pt \
+  --model-name-or-path heyongxin233/DETree \
+  --host 0.0.0.0 --port 7860
+```
+
+Both demo entry points automatically expose controls for switching the embedding layer, changing the kNN neighbourhood size, and adjusting the detection threshold.
+
+## 🏋️ Training
+
+The training workflow mirrors the two-stage procedure described in the paper:
+
+1. **Warm-up (flat PCL tree)**
+   - [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh): build the handcrafted two-level tree from the RealBench JSONL files.
+   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree with LoRA adapters on the warm-up tree.
+   - [`scripts/gen_emb.sh`](scripts/gen_emb.sh): export the warm-up embedding database for downstream clustering.
+2. **Hierarchical refinement (HAT tree)**
+   - [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh): compute similarity matrices from the warm-up embeddings and derive the hierarchical tree (per encoder layer).
+   - [`scripts/train_detree.sh`](scripts/train_detree.sh): retrain DETree on the new tree (update `EXPERIMENT_NAME`/paths for the main stage).
+3. **Evaluation and deployment**
+   - [`scripts/merge_lora.sh`](scripts/merge_lora.sh): merge the LoRA adapter into the base RoBERTa checkpoint for standalone inference.
+   - [`scripts/compress_database.sh`](scripts/compress_database.sh): cluster embeddings into compact prototypes if you want the same 10k/10k footprint as the released databases.
+   - [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) or [`scripts/test_score_knn.sh`](scripts/test_score_knn.sh): evaluate the merged model either against a cached database or directly on JSONL corpora.
+
+Each script lists all configurable arguments at the top—edit the path and hyper-parameter variables, then run the file directly.
+
+## 🔁 Reproducing the Paper
+
+Follow the sequence below to fully reproduce the NeurIPS 2025 results. Paths assume the dataset lives under `/path/to/RealBench`.
+
+1. **Prepare the tree and warm-up training**
+   ```bash
+   bash scripts/extract_pcl_tree.sh
+   bash scripts/train_detree.sh
+   bash scripts/gen_emb.sh
+   ```
+2. **Build the hierarchical tree**
+   ```bash
+   bash scripts/build_hat_tree.sh
+   ```
+3. **Main-stage training + merging**
+   - Update `scripts/train_detree.sh` with the new tree path and experiment name, then rerun it for the main-stage fit.
+   - Merge the resulting adapter:
+     ```bash
+     bash scripts/merge_lora.sh
+     ```
+4. **Produce final embeddings**
+   - Rerun [`scripts/gen_emb.sh`](scripts/gen_emb.sh) with the main-stage checkpoint to export the full database.
+   - Optionally compress it with [`scripts/compress_database.sh`](scripts/compress_database.sh) to match the released 10k prototype size.
+5. **Evaluate**
+   ```bash
+   bash scripts/test_database_score_knn.sh
+   # or, without a precomputed database:
+   bash scripts/test_score_knn.sh
+   ```
+
+All intermediate artefacts (trees, checkpoints, TensorBoard logs, embedding caches) are written to the directories declared near the top of each script. Keep those paths consistent to avoid accidental overwrites between stages.
+
+## 📜 Scripts Overview
+
+| Script | Purpose |
+| --- | --- |
+| [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh) | Generate the two-level PCL tree used during warm-up training. |
+| [`scripts/train_detree.sh`](scripts/train_detree.sh) | Launch DETree training with configurable optimisation, LoRA, and data options. |
+| [`scripts/gen_emb.sh`](scripts/gen_emb.sh) | Export embedding databases from a trained checkpoint. |
+| [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh) | Create similarity matrices and hierarchical trees (HAT) from warm-up embeddings. |
+| [`scripts/merge_lora.sh`](scripts/merge_lora.sh) | Merge a LoRA adapter into the base RoBERTa model. |
+| [`scripts/compress_database.sh`](scripts/compress_database.sh) | Cluster embeddings into compact prototypes for efficient inference. |
+| [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) | Evaluate checkpoints against a saved embedding database. |
+| [`scripts/test_score_knn.sh`](scripts/test_score_knn.sh) | Evaluate checkpoints directly on JSONL corpora without a cached database. |
+
