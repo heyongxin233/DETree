@@ -9,7 +9,6 @@
 - [Installation](#installation)
 - [Demo & Inference](#demo--inference)
 - [Training](#training)
-- [Reproducing the Paper](#reproducing-the-paper)
 - [Scripts Overview](#scripts-overview)
 - [Citation](#Citation)
 
@@ -116,6 +115,14 @@ Both demo entry points automatically expose controls for switching the embedding
 
 ## 🏋️ Training
 
+### Tree-Structured Contrastive Learning
+
+Align the encoder with the HAT using a tree-structured contrastive loss. We provide prebuilt trees in `HAT_structure/`; using the corresponding tree directly can reproduce the results in the paper.
+
+Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree on the build tree.
+
+### Reproducing the Paper
+
 The training workflow mirrors the two-stage procedure described in the paper:
 
 1. **Stage 1: Supervision Contrastive Learning**
@@ -131,38 +138,6 @@ The training workflow mirrors the two-stage procedure described in the paper:
    - [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) or [`scripts/test_score_knn.sh`](scripts/test_score_knn.sh): evaluate the merged model either against a cached database or directly on JSONL corpora.
 
 Each script lists all configurable arguments at the top—edit the path and hyper-parameter variables, then run the file directly.
-
-## 🔁 Reproducing the Paper
-
-Follow the sequence below to fully reproduce the NeurIPS 2025 results. Paths assume the dataset lives under `/path/to/RealBench`.
-
-1. **Prepare the tree and warm-up training**
-   ```bash
-   bash scripts/extract_pcl_tree.sh
-   bash scripts/train_detree.sh
-   bash scripts/gen_emb.sh
-   ```
-2. **Build the hierarchical tree**
-   ```bash
-   bash scripts/build_hat_tree.sh
-   ```
-3. **Main-stage training + merging**
-   - Update `scripts/train_detree.sh` with the new tree path and experiment name, then rerun it for the main-stage fit.
-   - Merge the resulting adapter:
-     ```bash
-     bash scripts/merge_lora.sh
-     ```
-4. **Produce final embeddings**
-   - Rerun [`scripts/gen_emb.sh`](scripts/gen_emb.sh) with the main-stage checkpoint to export the full database.
-   - Optionally compress it with [`scripts/compress_database.sh`](scripts/compress_database.sh) to match the released 10k prototype size.
-5. **Evaluate**
-   ```bash
-   bash scripts/test_database_score_knn.sh
-   # or, without a precomputed database:
-   bash scripts/test_score_knn.sh
-   ```
-
-All intermediate artefacts (trees, checkpoints, TensorBoard logs, embedding caches) are written to the directories declared near the top of each script. Keep those paths consistent to avoid accidental overwrites between stages.
 
 ## 📜 Scripts Overview
 
