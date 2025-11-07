@@ -4,7 +4,7 @@
 
 ## Table of Contents
 - [Introduction](#introduction)
-- [Dataset](#dataset)
+- [RealBench Dataset](#dataset)
 - [Model](#model)
 - [Installation](#installation)
 - [Demo & Inference](#demo--inference)
@@ -14,11 +14,14 @@
 
 ## 🎯 Introduction
 
-DETree tackles human–AI collaborative text detection with a tree-structured, multi-level contrastive learning framework. This repository contains the full training and inference stack used in our paper. Every stage is exposed as a standalone Python module or shell script so you can mix, match, and customise the pipeline without digging through hidden orchestration logic.
+DETree is a novel representation learning-based detection framework designed to address the challenges of identifying human-AI hybrid text in complex real-world scenarios. We construct RealBench, a large-scale benchmark dataset that encompasses diverse modes of human–AI collaborative writing. By explicitly modeling the hierarchical relationships among text sources, DETree reveals that hybrid texts generated through human–AI collaboration exhibit stronger AI traces than human characteristics. Extensive experiments demonstrate that our method achieves state-of-the-art performance across multiple benchmark tasks and maintains strong generalization capabilities under low-supervision conditions and severe distribution shifts. 
 
-## 🗂️ Dataset
+This repository contains the full training and inference stack used in our paper. Every stage is exposed as a standalone Python module or shell script so you can mix, match, and customise the pipeline without digging through hidden orchestration logic.
 
-RealBench provides human-written, machine-generated, and collaborative texts paired with metadata that mirrors the settings in the paper. Download the dataset from the Hugging Face Hub and keep the folder structure intact:
+## 🗂️ RealBench Dataset
+
+RealBench consists of human-written, machine-generated, and human–AI collaborative texts, constructed following the same settings as described in the paper. 
+Download the dataset from the Hugging Face Hub and keep the folder structure intact:
 
 ```bash
 huggingface-cli download --repo-type dataset heyongxin233/RealBench --local-dir /path/to/RealBench
