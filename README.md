@@ -1,5 +1,7 @@
 # DETree: DEtecting Human-AI Collaborative Texts via Tree-Structured Hierarchical Representation Learning ✨
 
+
+
 📄 NeurIPS 2025 · [Paper](https://arxiv.org/abs/2510.17489) · 🤗 [Model: heyongxin233/DETree](https://huggingface.co/heyongxin233/DETree) · 🧪 [Dataset: heyongxin233/RealBench](https://huggingface.co/datasets/heyongxin233/RealBench)
 
 ## Table of Contents
@@ -55,7 +57,7 @@ Every JSON record exposes the keys consumed by the training and evaluation scrip
 Inside the root folder you will also find an `embbedings/` directory containing two ready-to-use databases:
 
 - `embbedings/mage_center10k.pt` – embeddings built from the MAGE training split and compressed to 10k prototypes.
-- `embbedings/priori1_center10k.pt` – embeddings covering the full RealBench AI/human data, compressed with the same hyper-parameters.
+- `embbedings/priori1_center10k.pt` – embeddings covering the RealBench training split and compressed to 10k prototypes.
 
 > 💡 **Plug-and-play embeddings:** Both files follow the exact schema produced by [`scripts/gen_emb.sh`](scripts/gen_emb.sh), making them drop-in replacements for generated checkpoints. Point the demo or inference commands below at either file for instant results—no retraining required.
 
@@ -115,20 +117,20 @@ Both demo entry points automatically expose controls for switching the embedding
 
 ### Tree-Structured Contrastive Learning
 
-Align the encoder representation space with the HAT using a tree-structured contrastive loss. We provide prebuilt trees in `HAT_structure/`; using the corresponding tree directly can reproduce the results in the paper.
+Align the encoder representation space with the HAT using the tree-structured contrastive loss. We provide prebuilt trees in `HAT_structure/`; using the corresponding tree directly can reproduce the results in the paper.
 
-Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train text encoder on the build HAT.
+Run [`scripts/train_detree.sh`](scripts/train_detree.sh): train the text encoder on the built HAT.
 
 ### Reproducing the Paper
 
 The training workflow mirrors the two-stage procedure described in the paper:
 
-1. **Stage 1: Supervision Contrastive Learning**
-   - [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh): build the handcrafted tree from the RealBench JSONL files.
-   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train text encoder with LoRA adapters on the handcrafted tree.
+1. **Stage 1: Supervised Contrastive Learning**
+   - [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh): build the SCL tree from the RealBench JSONL files.
+   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train text encoder with LoRA adapters on the SCL tree.
    - [`scripts/gen_emb.sh`](scripts/gen_emb.sh): export the Stage 1 embedding database.
 2. **Stage 2:Tree-Structured Contrastive Learning**
-   - [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh): compute similarity matrix from the Stage 1 embeddings and derive HAT.
+   - [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh): compute class similarity matrix from the Stage 1 embeddings and construct HAT.
    - [`scripts/train_detree.sh`](scripts/train_detree.sh): train text encoder on the HAT.
 3. **Evaluation and deployment**
    - [`scripts/merge_lora.sh`](scripts/merge_lora.sh): merge the LoRA adapter into the base checkpoint for standalone inference.
@@ -144,10 +146,10 @@ Each script lists all configurable arguments at the top—edit the path and hype
 | [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh) | Generate the SCL tree used during stage 1 training. |
 | [`scripts/train_detree.sh`](scripts/train_detree.sh) | Launch DETree training with configurable optimisation, LoRA, and data options. |
 | [`scripts/gen_emb.sh`](scripts/gen_emb.sh) | Export embedding databases from a trained checkpoint. |
-| [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh) | Create similarity matrices and HAT from embeddings. |
+| [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh) | Create class similarity matrix and HAT from embeddings. |
 | [`scripts/merge_lora.sh`](scripts/merge_lora.sh) | Merge a LoRA adapter into the base RoBERTa model. |
 | [`scripts/compress_database.sh`](scripts/compress_database.sh) | Cluster embeddings into compact prototypes for efficient inference. |
-| [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) | Evaluate checkpoints against a saved embedding database. |
+| [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) | Evaluate checkpoints using a saved embedding database.. |
 | [`scripts/test_score_knn.sh`](scripts/test_score_knn.sh) | Evaluate checkpoints directly on JSONL corpora without a cached database. |
 
 ## 📚 Citation
