@@ -118,16 +118,16 @@ Both demo entry points automatically expose controls for switching the embedding
 
 The training workflow mirrors the two-stage procedure described in the paper:
 
-1. **Warm-up (flat PCL tree)**
-   - [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh): build the handcrafted two-level tree from the RealBench JSONL files.
-   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree with LoRA adapters on the warm-up tree.
-   - [`scripts/gen_emb.sh`](scripts/gen_emb.sh): export the warm-up embedding database for downstream clustering.
-2. **Hierarchical refinement (HAT tree)**
-   - [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh): compute similarity matrices from the warm-up embeddings and derive the hierarchical tree (per encoder layer).
-   - [`scripts/train_detree.sh`](scripts/train_detree.sh): retrain DETree on the new tree (update `EXPERIMENT_NAME`/paths for the main stage).
+1. **Stage 1: Supervision Contrastive Learning**
+   - [`scripts/extract_pcl_tree.sh`](scripts/extract_pcl_tree.sh): build the handcrafted tree from the RealBench JSONL files.
+   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree with LoRA adapters on the handcrafted tree.
+   - [`scripts/gen_emb.sh`](scripts/gen_emb.sh): export the Stage 1 embedding database.
+2. **Stage 2:Tree-Structured Contrastive Learning**
+   - [`scripts/build_hat_tree.sh`](scripts/build_hat_tree.sh): compute similarity matrices from the Stage 1 embeddings and derive the hierarchical tree (per encoder layer).
+   - [`scripts/train_detree.sh`](scripts/train_detree.sh): train DETree on the new tree.
 3. **Evaluation and deployment**
-   - [`scripts/merge_lora.sh`](scripts/merge_lora.sh): merge the LoRA adapter into the base RoBERTa checkpoint for standalone inference.
-   - [`scripts/compress_database.sh`](scripts/compress_database.sh): cluster embeddings into compact prototypes if you want the same 10k/10k footprint as the released databases.
+   - [`scripts/merge_lora.sh`](scripts/merge_lora.sh): merge the LoRA adapter into the base checkpoint for standalone inference.
+   - [`scripts/compress_database.sh`](scripts/compress_database.sh): cluster embeddings into compact and balanced prototypes.
    - [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) or [`scripts/test_score_knn.sh`](scripts/test_score_knn.sh): evaluate the merged model either against a cached database or directly on JSONL corpora.
 
 Each script lists all configurable arguments at the top—edit the path and hyper-parameter variables, then run the file directly.
@@ -181,6 +181,11 @@ All intermediate artefacts (trees, checkpoints, TensorBoard logs, embedding cach
 
 If you use our code or findings in your research, please cite us as:
 ```
-@
+@article{nips2025detree,
+  title={DETree: DEtecting Human-AI Collaborative Texts via Tree-Structured Hierarchical Representation Learning},
+  author={He, Yongxin and Zhang, Shan and Cao, Yixuan and Ma, Lei and Luo, Ping},
+  journal={arXiv preprint arXiv:2510.17489},
+  year={2025}
+}
 ```
 
