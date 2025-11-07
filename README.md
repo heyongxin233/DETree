@@ -11,6 +11,7 @@
 - [Training](#training)
 - [Reproducing the Paper](#reproducing-the-paper)
 - [Scripts Overview](#scripts-overview)
+- [Citation](#Citation)
 
 ## 🎯 Introduction
 
@@ -175,4 +176,11 @@ All intermediate artefacts (trees, checkpoints, TensorBoard logs, embedding cach
 | [`scripts/compress_database.sh`](scripts/compress_database.sh) | Cluster embeddings into compact prototypes for efficient inference. |
 | [`scripts/test_database_score_knn.sh`](scripts/test_database_score_knn.sh) | Evaluate checkpoints against a saved embedding database. |
 | [`scripts/test_score_knn.sh`](scripts/test_score_knn.sh) | Evaluate checkpoints directly on JSONL corpora without a cached database. |
+
+## 📚 Citation
+
+If you use our code or findings in your research, please cite us as:
+```
+@
+```
 
