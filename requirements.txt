@@ -1,5 +1,4 @@
 torch  # Recommended: 2.8.0
-faiss-gpu
 transformers>=4.36.0
 peft>=0.7.0
 lightning
@@ -15,3 +14,5 @@ scikit-learn>=1.3.0
 scipy>=1.10.0
 tensorboard>=2.15.0
 tqdm>=4.66.0
+faiss-gpu-cu12 #for CUDA 12.x users
+# faiss-cpu #for CPU only users

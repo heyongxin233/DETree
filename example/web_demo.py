@@ -177,8 +177,8 @@ def build_interface(detector: Detector) -> gr.Blocks:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the DETree Gradio demo.")
-    parser.add_argument("--database-path", type=Path, required=True)
-    parser.add_argument("--model-name-or-path", type=str, required=True)
+    parser.add_argument("--database-path", type=Path, required=False)
+    parser.add_argument("--model-name-or-path", type=str, required=False)
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7860)
     parser.add_argument("--share", action="store_true", help="Enable Gradio share link")
@@ -198,8 +198,8 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     args = parser.parse_args(argv)
 
     detector = Detector(
-        database_path=args.database_path,
-        model_name_or_path=args.model_name_or_path,
+        database_path="/content/detree_zip/lib/embeddings/priori1_center10k.pt",#args.database_path,
+        model_name_or_path="/content/detree_zip/lib/model",#args.model_name_or_path,
         pooling=args.pooling,
         max_length=args.max_length,
         batch_size=args.batch_size,
